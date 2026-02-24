@@ -1,1 +1,58 @@
-{"nbformat":4,"nbformat_minor":0,"metadata":{"colab":{"provenance":[{"file_id":"1T09J2pj7rqY8uX8MDBseVc_tea3pR3qO","timestamp":1771934451098}],"authorship_tag":"ABX9TyPqqqpuYM4QqPY1VnUxaSly"},"kernelspec":{"name":"python3","display_name":"Python 3"},"language_info":{"name":"python"}},"cells":[{"cell_type":"code","execution_count":null,"metadata":{"id":"4YOu3Sltgmva"},"outputs":[],"source":["\n","import pandas as pd\n","import matplotlib.pyplot as plt\n","import seaborn as sns\n","\n","df = pd.read_csv('SQL - Retail Sales Analysis_utf.xlsx - in.csv')\n","\n","df.rename(columns={'quantiy': 'quantity'}, inplace=True)\n","\n","df['sale_date'] = pd.to_datetime(df['sale_date'])\n","\n","df['month'] = df['sale_date'].dt.month_name()\n","df['day_of_week'] = df['sale_date'].dt.day_name()\n","\n","for col in df.columns:\n","    if df[col].dtype in ['float64', 'int64']:\n","        df[col] = df[col].fillna(df[col].mean())\n","    else:\n","        df[col] = df[col].fillna(df[col].mode()[0])\n","\n","df = df[df['total_sale'] > 0]\n","\n","Q1 = df['total_sale'].quantile(0.25)\n","Q3 = df['total_sale'].quantile(0.75)\n","IQR = Q3 - Q1\n","lower_bound = Q1 - 1.5 * IQR\n","upper_bound = Q3 + 1.5 * IQR\n","df = df[(df['total_sale'] >= lower_bound) & (df['total_sale'] <= upper_bound)]\n","\n","sns.set_theme(style=\"whitegrid\")\n","\n","plt.figure(figsize=(12, 6))\n","monthly_sales = df.groupby('month')['total_sale'].sum().reindex([\n","    'January', 'February', 'March', 'April', 'May', 'June',\n","    'July', 'August', 'September', 'October', 'November', 'December'\n","])\n","monthly_sales.plot(kind='bar', color='skyblue')\n","plt.title('Aylık Satış Trendi')\n","plt.xlabel('Ay')\n","plt.ylabel('Toplam Satış')\n","plt.xticks(rotation=45)\n","plt.tight_layout()\n","plt.show()\n","\n","plt.figure(figsize=(10, 6))\n","category_revenue = df.groupby('category')['total_sale'].sum().sort_values(ascending=False)\n","category_revenue.plot(kind='pie', autopct='%1.1f%%', startangle=140, cmap='viridis')\n","plt.title('Kategorilere Göre Toplam Gelir Dağılımı')\n","plt.ylabel('')\n","plt.show()\n","\n","plt.figure(figsize=(10, 8))\n","numeric_df = df.select_dtypes(include=['float64', 'int64'])\n","sns.heatmap(numeric_df.corr(), annot=True, cmap='coolwarm', fmt='.2f')\n","plt.title('Değişkenler Arası Korelasyon Isı Haritası')\n","plt.show()\n","\n","print(\"İşlem Tamamlandı.\")\n","print(f\"Temizlik sonrası veri seti boyutu: {df.shape}\")"]}]}
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+df = pd.read_csv('SQL - Retail Sales Analysis_utf.xlsx - in.csv')
+
+df.rename(columns={'quantiy': 'quantity'}, inplace=True)
+
+df['sale_date'] = pd.to_datetime(df['sale_date'])
+
+df['month'] = df['sale_date'].dt.month_name()
+df['day_of_week'] = df['sale_date'].dt.day_name()
+
+for col in df.columns:
+    if df[col].dtype in ['float64', 'int64']:
+        df[col] = df[col].fillna(df[col].mean())
+    else:
+        df[col] = df[col].fillna(df[col].mode()[0])
+
+df = df[df['total_sale'] > 0]
+
+Q1 = df['total_sale'].quantile(0.25)
+Q3 = df['total_sale'].quantile(0.75)
+IQR = Q3 - Q1
+lower_bound = Q1 - 1.5 * IQR
+upper_bound = Q3 + 1.5 * IQR
+df = df[(df['total_sale'] >= lower_bound) & (df['total_sale'] <= upper_bound)]
+
+sns.set_theme(style="whitegrid")
+
+plt.figure(figsize=(12, 6))
+monthly_sales = df.groupby('month')['total_sale'].sum().reindex([
+    'January', 'February', 'March', 'April', 'May', 'June', 
+    'July', 'August', 'September', 'October', 'November', 'December'
+])
+monthly_sales.plot(kind='bar', color='skyblue')
+plt.title('Aylık Satış Trendi')
+plt.xlabel('Ay')
+plt.ylabel('Toplam Satış')
+plt.xticks(rotation=45)
+plt.tight_layout()
+plt.show()
+
+plt.figure(figsize=(10, 6))
+category_revenue = df.groupby('category')['total_sale'].sum().sort_values(ascending=False)
+category_revenue.plot(kind='pie', autopct='%1.1f%%', startangle=140, cmap='viridis')
+plt.title('Kategorilere Göre Toplam Gelir Dağılımı')
+plt.ylabel('')
+plt.show()
+
+plt.figure(figsize=(10, 8))
+numeric_df = df.select_dtypes(include=['float64', 'int64'])
+sns.heatmap(numeric_df.corr(), annot=True, cmap='coolwarm', fmt='.2f')
+plt.title('Değişkenler Arası Korelasyon Isı Haritası')
+plt.show()
+
+print("İşlem Tamamlandı.")
+print(f"Temizlik sonrası veri seti boyutu: {df.shape}")
